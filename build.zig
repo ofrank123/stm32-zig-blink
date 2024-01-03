@@ -11,26 +11,27 @@ pub fn build(b: *Build) void {
         .abi = .eabihf,
     };
 
-    // Standard release options allow the person running `zig build` to select
-    // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
-
+    // Create elf object
     const elf = b.addExecutable(std.Build.ExecutableOptions{
         .target = target,
         .root_source_file = .{ .path = "main.zig" },
         .name = "firmware.elf",
     });
-    elf.setLinkerScript(.{ .path = "link.ld" });
+    elf.setLinkerScript(.{ .path = "link.ld" }); // Custom linker script
     b.installArtifact(elf);
 
+    // Strip out symbols and make bin
     const bin = elf.addObjCopy(Build.Step.ObjCopy.Options{
         .format = .bin,
     });
 
+    // Copy bin to output dir
     const copy_bin = b.addInstallBinFile(bin.getOutput(), "firmware.bin");
     copy_bin.step.dependOn(&bin.step);
 
     b.getInstallStep().dependOn(&copy_bin.step);
 
+    // Reflash the MCU
     const flash_cmd = b.addSystemCommand(&[_][]const u8{
         "st-flash",
         "--reset",

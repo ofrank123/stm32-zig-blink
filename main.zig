@@ -141,6 +141,7 @@ extern const _sidata: u32;
 extern const _sdata: u32;
 extern const _edata: u32;
 
+// Reset handler
 export fn _reset() noreturn {
     // Clear the BSS
     var bss: [*]u32 = @ptrCast(&_sbss);
@@ -160,6 +161,8 @@ export fn _reset() noreturn {
 // Stack ptr address, but we're gonna declare it as a function to avoid type errors.
 extern fn _estack() void;
 
+// Interrupt Vectors
+// These will get dropped into the beginning of flash memory at link time
 export const tab linksection(".vectors") = [_]?*const anyopaque{
     @ptrCast(&_estack),
     @ptrCast(&_reset),
